@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js";
 import {
   Calendar,
   Clock,
@@ -12,23 +11,25 @@ import {
   Sun,
   Moon,
   RefreshCw,
+  Lock,
+  Unlock,
+  Trash2,
+  LayoutDashboard,
+  CalendarPlus,
+  CalendarClock,
 } from "lucide-react";
+import { supabase } from "./lib/supabase";
+import BookingView from "./BookingView";
+import AdminScheduleView from "./AdminScheduleView";
 
 /* =========================================================================
-   BEBOLD BORAMAE · 출석/예약 현황판  (v4)
+   BEBOLD BORAMAE · 출석/예약 현황판  (v5 — 예약 시스템 버전)
    -------------------------------------------------------------------------
-   v4 변경사항
-   1) 정원(capacity) 개념 제거 — 인원수만 카운트
-   2) 예약자 정렬 = 이름순이 아니라 "댓글 작성 시각(commented_at)"순
-   3) 13~16번째: 주황 테두리(마감임박) / 17번째부터: 핑크 테두리(대기자)
-   4) 이름에 마우스 오버(PC) / 탭(모바일) 시 전화번호 뒷자리 + 변경 이력 표시
-   ※ 드랍인(drop-in) 확장 로직은 scripts/naver_cafe_sync.py 쪽에서 처리합니다.
+   v5 변경사항
+   1) 네이버 카페 스크래핑 대신 회원이 이 웹에서 직접 예약/취소 (BookingView)
+   2) 요일 기본 시간표 + 예외 날짜(공휴일 등) 관리 (AdminScheduleView, 코치 PIN 필요)
+   3) 코치는 관리자 모드로 다른 회원의 예약을 대신 취소할 수 있음
    ========================================================================= */
-
-// Vercel/로컬 .env에 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 를 설정하세요.
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const MORNING_START = "06:30";
 const MORNING_END = "12:00";
@@ -67,6 +68,7 @@ function displayName(name) {
 }
 
 export default function App() {
+  const [view, setView] = useState("dashboard"); // "dashboard" | "booking" | "schedule"
   const [members, setMembers] = useState([]);
   const [date, setDate] = useState(todayStr());
   // 접힌(collapsed) 타임만 기록 — 그날 실제로 예약이 있는 시간만 카드가 생기고,
@@ -78,12 +80,68 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [lastSynced, setLastSynced] = useState(null);
 
+  // 관리자(코치) 모드 — PIN 확인은 클라이언트가 아니라 Supabase RPC(check_admin_pin)가 함.
+  // 확인된 PIN만 로컬에 저장해두고, 다음 관리자 작업(시간표 변경 등)을 부를 때 그대로 같이 보냄.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPin, setAdminPin] = useState("");
+  const [pinPromptOpen, setPinPromptOpen] = useState(false);
+  const [pinDraft, setPinDraft] = useState("");
+
   const showToast = useCallback((msg) => setToast(msg), []);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("bb_admin_pin");
+    if (!saved) return;
+    supabase.rpc("check_admin_pin", { p_pin: saved }).then(({ data, error }) => {
+      if (data) {
+        setAdminPin(saved);
+        setIsAdmin(true);
+      } else if (!error) {
+        // 잠금 등 에러가 아니라 진짜로 PIN이 틀린 경우에만 저장된 값을 지운다.
+        localStorage.removeItem("bb_admin_pin");
+      }
+    });
+  }, []);
+
+  async function submitPin() {
+    const { data, error } = await supabase.rpc("check_admin_pin", { p_pin: pinDraft });
+    if (error) {
+      showToast(error.message.includes("잠깁니다") ? error.message : "인증에 실패했어요");
+      return;
+    }
+    if (!data) {
+      showToast("PIN이 올바르지 않아요");
+      return;
+    }
+    localStorage.setItem("bb_admin_pin", pinDraft);
+    setAdminPin(pinDraft);
+    setIsAdmin(true);
+    setPinPromptOpen(false);
+    setPinDraft("");
+    showToast("관리자 모드가 켜졌어요");
+  }
+
+  function lockAdmin() {
+    localStorage.removeItem("bb_admin_pin");
+    setAdminPin("");
+    setIsAdmin(false);
+    showToast("관리자 모드를 해제했어요");
+  }
+
+  async function forceCancel(id) {
+    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    if (error) {
+      showToast("취소에 실패했어요");
+      return;
+    }
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    showToast("예약을 취소했어요");
+  }
 
   const fetchMembers = useCallback(async () => {
     const { data, error } = await supabase
@@ -107,6 +165,11 @@ export default function App() {
     setLoading(true);
     fetchMembers();
   }, [fetchMembers]);
+
+  // 예약하기/시간표 탭에 있다가 현황판 탭으로 돌아올 때마다 최신 데이터를 다시 불러온다.
+  useEffect(() => {
+    if (view === "dashboard") fetchMembers();
+  }, [view, fetchMembers]);
 
   // 스크래핑 스크립트가 reservations를 갱신하면 실시간으로 화면도 갱신
   useEffect(() => {
@@ -190,11 +253,11 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
         .font-display { font-family: 'Oswald', sans-serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        @keyframes toast-in { from { opacity:0; transform: translate(-50%, 8px);} to {opacity:1; transform: translate(-50%,0);} }
+        @keyframes toast-in { from { opacity:0; } to { opacity:1; } }
       `}</style>
 
       <header className="sticky top-0 z-20 border-b border-[#2E3238] bg-[#121316]/95 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between gap-3">
+        <div className="mx-auto max-w-6xl px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg">
               <img src="/logo.png" alt="Bebold Boramae" className="h-full w-full object-cover" />
@@ -210,26 +273,95 @@ export default function App() {
             </div>
           </div>
 
+          <nav className="flex items-center gap-1 rounded-lg border border-[#2E3238] bg-[#1C1E22] p-1">
+            {[
+              { key: "dashboard", label: "현황판", Icon: LayoutDashboard },
+              { key: "booking", label: "예약하기", Icon: CalendarPlus },
+              { key: "schedule", label: "시간표", Icon: CalendarClock },
+            ].map(({ key, label, Icon }) => (
+              <button
+                key={key}
+                onClick={() => setView(key)}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  view === key ? "bg-[#F5C518]/15 text-[#F5C518]" : "text-[#8B9099] hover:text-[#F2F3F5]"
+                }`}
+              >
+                <Icon size={13} /> {label}
+              </button>
+            ))}
+          </nav>
+
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 rounded-lg border border-[#2E3238] bg-[#1C1E22] px-2.5 py-1.5">
-              <Calendar size={14} className="text-[#8B9099]" />
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="bg-transparent text-sm font-mono outline-none [color-scheme:dark]"
-              />
-            </div>
+            {view === "dashboard" && (
+              <>
+                <div className="flex items-center gap-1.5 rounded-lg border border-[#2E3238] bg-[#1C1E22] px-2.5 py-1.5">
+                  <Calendar size={14} className="text-[#8B9099]" />
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="bg-transparent text-sm font-mono outline-none [color-scheme:dark]"
+                  />
+                </div>
+                <button
+                  onClick={() => setDate(todayStr())}
+                  className="hidden sm:block rounded-lg border border-[#2E3238] bg-[#1C1E22] px-3 py-1.5 text-xs font-medium text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 transition-colors"
+                >
+                  오늘
+                </button>
+              </>
+            )}
             <button
-              onClick={() => setDate(todayStr())}
-              className="hidden sm:block rounded-lg border border-[#2E3238] bg-[#1C1E22] px-3 py-1.5 text-xs font-medium text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 transition-colors"
+              onClick={() => (isAdmin ? lockAdmin() : setPinPromptOpen(true))}
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                isAdmin
+                  ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
+                  : "border-[#2E3238] bg-[#1C1E22] text-[#8B9099] hover:text-[#F2F3F5]"
+              }`}
             >
-              오늘
+              {isAdmin ? <Unlock size={13} /> : <Lock size={13} />}
+              <span className="hidden sm:inline">관리자</span>
             </button>
           </div>
         </div>
+
+        {pinPromptOpen && (
+          <div className="border-t border-[#2E3238] bg-[#1C1E22] px-4 py-3">
+            <div className="mx-auto max-w-6xl flex items-center gap-2">
+              <input
+                type="password"
+                inputMode="numeric"
+                autoFocus
+                value={pinDraft}
+                onChange={(e) => setPinDraft(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitPin()}
+                placeholder="관리자 인증"
+                className="w-40 rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-1.5 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+              />
+              <button
+                onClick={submitPin}
+                className="rounded-lg bg-[#F5C518] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#F5C518]/90"
+              >
+                확인
+              </button>
+              <button
+                onClick={() => {
+                  setPinPromptOpen(false);
+                  setPinDraft("");
+                }}
+                className="text-xs text-[#8B9099] hover:text-[#F2F3F5]"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
+      {view === "booking" && <BookingView showToast={showToast} />}
+      {view === "schedule" && <AdminScheduleView isAdmin={isAdmin} pin={adminPin} showToast={showToast} />}
+
+      {view === "dashboard" && (
       <main className="mx-auto max-w-6xl px-4 py-5 space-y-5" onClick={() => setRevealedId(null)}>
         <section>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -265,6 +397,8 @@ export default function App() {
                 toggleAttended={toggleAttended}
                 revealedId={revealedId}
                 setRevealedId={setRevealedId}
+                isAdmin={isAdmin}
+                onForceCancel={forceCancel}
               />
               <PeriodGroup
                 label="오후 수업"
@@ -278,6 +412,8 @@ export default function App() {
                 toggleAttended={toggleAttended}
                 revealedId={revealedId}
                 setRevealedId={setRevealedId}
+                isAdmin={isAdmin}
+                onForceCancel={forceCancel}
               />
               {slotsByPeriod.other.length > 0 && (
                 <PeriodGroup
@@ -292,16 +428,19 @@ export default function App() {
                   toggleAttended={toggleAttended}
                   revealedId={revealedId}
                   setRevealedId={setRevealedId}
+                  isAdmin={isAdmin}
+                  onForceCancel={forceCancel}
                 />
               )}
             </>
           )}
         </section>
       </main>
+      )}
 
       {toast && (
         <div
-          className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-[#2E3238] bg-[#1C1E22] px-4 py-2.5 text-sm shadow-xl font-mono"
+          className="fixed top-1/2 left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 max-w-[85vw] text-center rounded-lg border border-[#2E3238] bg-[#1C1E22] px-4 py-2.5 text-sm shadow-xl font-mono"
           style={{ animation: "toast-in 0.18s ease-out" }}
         >
           {toast}
@@ -324,7 +463,7 @@ const CARD_BG_MAP = {
   gray: "bg-[#1C1E22] border-[#2E3238]",
 };
 
-function PeriodGroup({ label, sublabel, times, accent, grouped, collapsedTimes, toggleExpand, copySlotList, toggleAttended, revealedId, setRevealedId }) {
+function PeriodGroup({ label, sublabel, times, accent, grouped, collapsedTimes, toggleExpand, copySlotList, toggleAttended, revealedId, setRevealedId, isAdmin, onForceCancel }) {
   if (!times.length) return null;
   const a = ACCENT_MAP[accent];
   const Icon = a.icon;
@@ -351,6 +490,8 @@ function PeriodGroup({ label, sublabel, times, accent, grouped, collapsedTimes, 
             onToggleAttended={toggleAttended}
             revealedId={revealedId}
             setRevealedId={setRevealedId}
+            isAdmin={isAdmin}
+            onForceCancel={onForceCancel}
           />
         ))}
       </div>
@@ -358,7 +499,7 @@ function PeriodGroup({ label, sublabel, times, accent, grouped, collapsedTimes, 
   );
 }
 
-function SlotCard({ time, list, accent, expanded, onToggle, onCopy, onToggleAttended, revealedId, setRevealedId }) {
+function SlotCard({ time, list, accent, expanded, onToggle, onCopy, onToggleAttended, revealedId, setRevealedId, isAdmin, onForceCancel }) {
   const count = list.length;
   const waitlistCount = Math.max(0, count - (WAITLIST_START - 1));
   const nearFull = count >= WARN_START && waitlistCount === 0;
@@ -411,6 +552,8 @@ function SlotCard({ time, list, accent, expanded, onToggle, onCopy, onToggleAtte
                     revealed={revealedId === m.id}
                     onReveal={(id) => setRevealedId(id)}
                     onToggleAttended={() => onToggleAttended(m.id, m.attended)}
+                    isAdmin={isAdmin}
+                    onForceCancel={() => onForceCancel(m.id)}
                   />
                 ))}
               </div>
@@ -436,7 +579,7 @@ const TIER_CLASS = {
   waitlist: "border-pink-600/70 bg-pink-600/10",
 };
 
-function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended }) {
+function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, isAdmin, onForceCancel }) {
   return (
     <div className="relative flex items-center gap-1.5 rounded-lg px-1.5 py-1 hover:bg-[#24272C] transition-colors min-w-0">
       <button
@@ -468,8 +611,19 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended }
 
       {revealed && (
         <div className="absolute left-1/2 -translate-x-1/2 top-full z-10 mt-1 whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-2.5 py-1.5 text-[11px] font-mono shadow-xl">
-          <div className="text-[#F2F3F5]">뒷자리 {member.phone}</div>
+          <div className="text-[#F2F3F5]">회원번호 {member.phone}</div>
           {member.changed && <div className="text-[#FF6A3D] mt-0.5">비고 : 시간 변경</div>}
+          {isAdmin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onForceCancel();
+              }}
+              className="mt-1 flex items-center gap-1 text-pink-400 hover:text-pink-300"
+            >
+              <Trash2 size={11} /> 예약 취소
+            </button>
+          )}
         </div>
       )}
     </div>
