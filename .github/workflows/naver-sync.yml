@@ -1,0 +1,29 @@
+name: Naver Cafe Sync
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # 5분마다 (GitHub 부하 상황에 따라 지연될 수 있음)
+  workflow_dispatch: {}       # Actions 탭에서 수동 실행 버튼도 생김 (테스트용)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NAVER_CLUB_ID: ${{ secrets.NAVER_CLUB_ID }}
+          NAVER_MENU_ID: ${{ secrets.NAVER_MENU_ID }}
+          NID_AUT: ${{ secrets.NID_AUT }}
+          NID_SES: ${{ secrets.NID_SES }}
+        run: python scripts/naver_cafe_sync.py
