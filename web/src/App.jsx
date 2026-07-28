@@ -52,6 +52,11 @@ function todayStr() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function formatClock(ts) {
+  if (!ts) return "-";
+  return new Date(ts).toLocaleTimeString("ko-KR");
+}
+
 function tierOf(oneBasedIndex) {
   if (oneBasedIndex >= WAITLIST_START) return "waitlist";
   if (oneBasedIndex >= WARN_START) return "warn";
@@ -618,6 +623,10 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, 
               비고 : 시간 변경{member.changed_from ? ` (${member.changed_from} → ${member.time})` : ""}
             </div>
           )}
+          <div className="text-[#5C6067] mt-0.5">
+            작성시간 {formatClock(member.updated_at)}
+            {member.changed && <span className="text-[#FF6A3D]"> (변경:{formatClock(member.commented_at)})</span>}
+          </div>
           {isAdmin && (
             <button
               onClick={(e) => {
