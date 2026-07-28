@@ -152,9 +152,11 @@ export default function BookingView({ showToast }) {
       showToast("변경할 시간을 선택해주세요");
       return;
     }
+    const current = (foundReservations || []).find((r) => r.id === id);
+    const fromTime = current?.time;
     const { error } = await supabase
       .from("reservations")
-      .update({ time: changeDraft, commented_at: new Date().toISOString(), changed: true })
+      .update({ time: changeDraft, commented_at: new Date().toISOString(), changed: true, changed_from: fromTime })
       .eq("id", id);
 
     if (error) {
@@ -168,10 +170,10 @@ export default function BookingView({ showToast }) {
       return;
     }
     setFoundReservations((prev) =>
-      (prev || []).map((r) => (r.id === id ? { ...r, time: changeDraft, changed: true } : r))
+      (prev || []).map((r) => (r.id === id ? { ...r, time: changeDraft, changed: true, changed_from: fromTime } : r))
     );
     setChangingId(null);
-    showToast(`${changeDraft}로 시간을 변경했어요`);
+    showToast(`${fromTime} → ${changeDraft}로 시간을 변경했어요`);
   }
 
   return (

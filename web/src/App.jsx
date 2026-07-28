@@ -613,7 +613,11 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, 
       {revealed && (
         <div className="absolute left-1/2 -translate-x-1/2 top-full z-10 mt-1 whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-2.5 py-1.5 text-[11px] font-mono shadow-xl">
           <div className="text-[#F2F3F5]">회원번호 {member.phone}</div>
-          {member.changed && <div className="text-[#FF6A3D] mt-0.5">비고 : 시간 변경</div>}
+          {member.changed && (
+            <div className="text-[#FF6A3D] mt-0.5">
+              비고 : 시간 변경{member.changed_from ? ` (${member.changed_from} → ${member.time})` : ""}
+            </div>
+          )}
           {isAdmin && (
             <button
               onClick={(e) => {
