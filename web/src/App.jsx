@@ -258,8 +258,8 @@ export default function App() {
       `}</style>
 
       <header className="sticky top-0 z-20 border-b border-[#2E3238] bg-[#121316]/95 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
+        <div className="mx-auto max-w-6xl px-4 py-4 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center gap-2.5 justify-self-center sm:justify-self-start">
             <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg">
               <img src="/logo.png" alt="Bebold Boramae" className="h-full w-full object-cover" />
             </div>
@@ -274,7 +274,7 @@ export default function App() {
             </div>
           </div>
 
-          <nav className="flex items-center gap-1 rounded-lg border border-[#2E3238] bg-[#1C1E22] p-1">
+          <nav className="flex items-center gap-1 rounded-lg border border-[#2E3238] bg-[#1C1E22] p-1 justify-self-center">
             {[
               { key: "dashboard", label: "현황판", Icon: LayoutDashboard },
               { key: "booking", label: "예약하기", Icon: CalendarPlus },
@@ -283,16 +283,16 @@ export default function App() {
               <button
                 key={key}
                 onClick={() => setView(key)}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-semibold transition-colors ${
                   view === key ? "bg-[#E7843B]/15 text-[#E7843B]" : "text-[#8B9099] hover:text-[#F2F3F5]"
                 }`}
               >
-                <Icon size={13} /> {label}
+                <Icon size={15} /> {label}
               </button>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-self-center sm:justify-self-end">
             {view === "dashboard" && (
               <>
                 <div className="flex items-center gap-1.5 rounded-lg border border-[#2E3238] bg-[#1C1E22] px-2.5 py-1.5">

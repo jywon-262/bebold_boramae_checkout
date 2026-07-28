@@ -274,7 +274,7 @@ export default function BookingView({ showToast }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-end">
             <div>
               <label className="text-xs text-[#8B9099] mb-1.5 block">이름 (일부만 입력해도 검색돼요)</label>
               <input
@@ -285,6 +285,7 @@ export default function BookingView({ showToast }) {
                 className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm outline-none focus:border-[#F5C518]/40"
               />
             </div>
+            <span className="pb-2.5 text-[11px] font-medium text-[#5C6067]">또는</span>
             <div>
               <label className="text-xs text-[#8B9099] mb-1.5 block">회원번호</label>
               <input
@@ -324,6 +325,7 @@ export default function BookingView({ showToast }) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-baseline gap-2">
                       <span className="text-sm font-mono font-semibold">{r.time}</span>
+                      <span className="text-sm text-[#D5D7DC]">{r.name}</span>
                       <span className="text-[11px] text-[#5C6067] font-mono">회원번호 {r.phone}</span>
                     </div>
                     {isCancelToday && (
@@ -338,7 +340,7 @@ export default function BookingView({ showToast }) {
                           onClick={() => cancelReservation(r.id)}
                           className="text-xs font-medium text-pink-400 hover:text-pink-300"
                         >
-                          취소
+                          예약취소
                         </button>
                       </div>
                     )}
