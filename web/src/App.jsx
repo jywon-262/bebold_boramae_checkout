@@ -616,7 +616,7 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, 
       </button>
 
       {revealed && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full z-10 mt-1 w-max max-w-[80vw] whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-3 py-2 text-xs font-mono shadow-xl">
+        <div className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-30 whitespace-normal sm:absolute sm:left-1/2 sm:right-auto sm:top-full sm:translate-y-0 sm:-translate-x-1/2 sm:mt-1 sm:z-10 sm:w-max sm:max-w-[80vw] sm:whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-3 py-2 text-xs font-mono shadow-xl">
           <div className="text-[#F2F3F5]">회원번호 {member.phone}</div>
           {member.changed && (
             <div className="text-[#FF6A3D] mt-0.5">
