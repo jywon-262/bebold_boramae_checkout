@@ -284,7 +284,7 @@ export default function App() {
                 key={key}
                 onClick={() => setView(key)}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  view === key ? "bg-[#F5C518]/15 text-[#F5C518]" : "text-[#8B9099] hover:text-[#F2F3F5]"
+                  view === key ? "bg-[#E7843B]/15 text-[#E7843B]" : "text-[#8B9099] hover:text-[#F2F3F5]"
                 }`}
               >
                 <Icon size={13} /> {label}

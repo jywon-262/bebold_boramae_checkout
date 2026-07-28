@@ -22,6 +22,7 @@ export default function BookingView({ showToast }) {
 
   const [cancelDate, setCancelDate] = useState(todayStr());
   const [cancelName, setCancelName] = useState("");
+  const [cancelPhone, setCancelPhone] = useState("");
   const [searching, setSearching] = useState(false);
   const [foundReservations, setFoundReservations] = useState(null);
   const [changingId, setChangingId] = useState(null);
@@ -105,17 +106,17 @@ export default function BookingView({ showToast }) {
 
   async function searchMyReservations(e) {
     e.preventDefault();
-    if (!cancelName.trim()) {
-      showToast("이름을 입력해주세요");
+    const nameQuery = cancelName.trim();
+    const phoneQuery = cancelPhone.trim();
+    if (!nameQuery && !phoneQuery) {
+      showToast("이름 또는 회원번호를 입력해주세요");
       return;
     }
     setSearching(true);
-    const { data, error } = await supabase
-      .from("reservations")
-      .select("*")
-      .eq("date", cancelDate)
-      .eq("name", cancelName.trim())
-      .order("time");
+    let query = supabase.from("reservations").select("*").eq("date", cancelDate);
+    if (nameQuery) query = query.ilike("name", `%${nameQuery}%`); // 이름은 일부만 일치해도 검색됨
+    if (phoneQuery) query = query.eq("phone", phoneQuery); // 회원번호는 완전히 일치해야 함
+    const { data, error } = await query.order("time");
     setSearching(false);
 
     if (error) {
@@ -250,7 +251,7 @@ export default function BookingView({ showToast }) {
           <button
             type="submit"
             disabled={submitting || availableTimes.length === 0}
-            className="w-full rounded-lg bg-[#F5C518] py-2.5 text-sm font-semibold text-[#121316] hover:bg-[#F5C518]/90 disabled:opacity-40 transition-colors"
+            className="w-full rounded-lg bg-[#E7843B] py-2.5 text-sm font-semibold text-white hover:bg-[#E7843B]/90 disabled:opacity-40 transition-colors"
           >
             {submitting ? "예약 중..." : "예약하기"}
           </button>
@@ -263,24 +264,37 @@ export default function BookingView({ showToast }) {
         </h2>
 
         <form onSubmit={searchMyReservations} className="space-y-3">
+          <div>
+            <label className="text-xs text-[#8B9099] mb-1.5 block">날짜</label>
+            <input
+              type="date"
+              value={cancelDate}
+              onChange={(e) => setCancelDate(e.target.value)}
+              className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-xs font-mono outline-none focus:border-[#F5C518]/40 [color-scheme:dark]"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-[#8B9099] mb-1.5 block">날짜</label>
-              <input
-                type="date"
-                value={cancelDate}
-                onChange={(e) => setCancelDate(e.target.value)}
-                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-xs font-mono outline-none focus:border-[#F5C518]/40 [color-scheme:dark]"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-[#8B9099] mb-1.5 block">이름</label>
+              <label className="text-xs text-[#8B9099] mb-1.5 block">이름 (일부만 입력해도 검색돼요)</label>
               <input
                 type="text"
                 value={cancelName}
                 onChange={(e) => setCancelName(e.target.value)}
                 placeholder="홍길동"
                 className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm outline-none focus:border-[#F5C518]/40"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-[#8B9099] mb-1.5 block">회원번호</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                value={cancelPhone}
+                onChange={(e) => setCancelPhone(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="1234"
+                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm font-mono outline-none focus:border-[#F5C518]/40"
               />
             </div>
           </div>
