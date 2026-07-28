@@ -14,7 +14,7 @@ export default function BookingView({ showToast }) {
   const [overrides, setOverrides] = useState([]);
   const [sundayPatternDefaults, setSundayPatternDefaults] = useState([]);
 
-  const [bookDate, setBookDate] = useState(todayStr());
+  const bookDate = todayStr();
   const [bookTime, setBookTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -55,6 +55,8 @@ export default function BookingView({ showToast }) {
     if (bookTime && !availableTimes.includes(bookTime)) setBookTime("");
   }, [availableTimes, bookTime]);
 
+  const isCancelToday = cancelDate === todayStr();
+
   const cancelDateTimes = useMemo(
     () => effectiveTimes(cancelDate, weekdayDefaults, overrides, sundayPatternDefaults),
     [cancelDate, weekdayDefaults, overrides, sundayPatternDefaults]
@@ -88,6 +90,8 @@ export default function BookingView({ showToast }) {
     if (error) {
       if (error.code === "23505") {
         showToast("이미 같은 시간에 예약되어 있어요");
+      } else if (error.code === "42501") {
+        showToast("예약은 당일에만 할 수 있어요");
       } else {
         showToast(error.message || "예약에 실패했어요");
       }
@@ -126,7 +130,11 @@ export default function BookingView({ showToast }) {
   async function cancelReservation(id) {
     const { error } = await supabase.from("reservations").delete().eq("id", id);
     if (error) {
-      showToast("취소에 실패했어요");
+      if (error.code === "42501") {
+        showToast("당일 예약만 취소할 수 있어요");
+      } else {
+        showToast("취소에 실패했어요");
+      }
       return;
     }
     setFoundReservations((prev) => (prev || []).filter((r) => r.id !== id));
@@ -151,6 +159,8 @@ export default function BookingView({ showToast }) {
     if (error) {
       if (error.code === "23505") {
         showToast("이미 그 시간에 예약이 있어요");
+      } else if (error.code === "42501" || error.code === "P0001") {
+        showToast(error.message || "당일 예약만 시간을 변경할 수 있어요");
       } else {
         showToast(error.message || "시간 변경에 실패했어요");
       }
@@ -175,12 +185,9 @@ export default function BookingView({ showToast }) {
             <label className="text-xs text-[#8B9099] mb-1.5 flex items-center gap-1.5">
               <Calendar size={12} /> 날짜
             </label>
-            <input
-              type="date"
-              value={bookDate}
-              onChange={(e) => setBookDate(e.target.value)}
-              className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-2 text-sm font-mono outline-none focus:border-[#F5C518]/40 [color-scheme:dark]"
-            />
+            <div className="w-full rounded-lg border border-[#2E3238] bg-[#121316]/60 px-3 py-2 text-sm font-mono text-[#8B9099]">
+              {bookDate} <span className="text-[11px] text-[#5C6067]">(예약은 당일에만 가능해요)</span>
+            </div>
           </div>
 
           <div>
@@ -287,6 +294,12 @@ export default function BookingView({ showToast }) {
           </button>
         </form>
 
+        {foundReservations && !isCancelToday && foundReservations.length > 0 && (
+          <p className="mt-3 text-[11px] text-[#5C6067] text-center">
+            {cancelDate < todayStr() ? "지난 날짜의 예약은 조회만 가능해요." : "당일 예약만 변경·취소할 수 있어요."}
+          </p>
+        )}
+
         {foundReservations && (
           <div className="mt-3 space-y-1.5">
             {foundReservations.length === 0 ? (
@@ -299,23 +312,25 @@ export default function BookingView({ showToast }) {
                       <span className="text-sm font-mono font-semibold">{r.time}</span>
                       <span className="text-[11px] text-[#5C6067] font-mono">회원번호 {r.phone}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => (changingId === r.id ? setChangingId(null) : openChangeTime(r))}
-                        className="flex items-center gap-1 text-xs font-medium text-[#8B9099] hover:text-[#F5C518]"
-                      >
-                        <Repeat size={12} /> 시간 변경
-                      </button>
-                      <button
-                        onClick={() => cancelReservation(r.id)}
-                        className="text-xs font-medium text-pink-400 hover:text-pink-300"
-                      >
-                        취소
-                      </button>
-                    </div>
+                    {isCancelToday && (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => (changingId === r.id ? setChangingId(null) : openChangeTime(r))}
+                          className="flex items-center gap-1 text-xs font-medium text-[#8B9099] hover:text-[#F5C518]"
+                        >
+                          <Repeat size={12} /> 시간 변경
+                        </button>
+                        <button
+                          onClick={() => cancelReservation(r.id)}
+                          className="text-xs font-medium text-pink-400 hover:text-pink-300"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {changingId === r.id && (
+                  {isCancelToday && changingId === r.id && (
                     <div className="mt-2.5 flex items-center gap-2 border-t border-[#2E3238] pt-2.5">
                       <select
                         value={changeDraft}

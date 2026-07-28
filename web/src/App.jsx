@@ -134,9 +134,10 @@ export default function App() {
   }
 
   async function forceCancel(id) {
-    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    // 관리자 강제취소는 날짜 제한 없이 동작해야 하므로 PIN 인증 RPC를 통해서만 처리한다.
+    const { error } = await supabase.rpc("admin_cancel_reservation", { p_id: id, p_pin: adminPin });
     if (error) {
-      showToast("취소에 실패했어요");
+      showToast(error.message || "취소에 실패했어요");
       return;
     }
     setMembers((prev) => prev.filter((m) => m.id !== id));
