@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Calendar,
   Clock,
@@ -586,6 +587,40 @@ const TIER_CLASS = {
 };
 
 function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, isAdmin, onForceCancel }) {
+  const btnRef = useRef(null);
+  const popupRef = useRef(null);
+  const [pos, setPos] = useState(null);
+
+  // 터치/클릭한 이름 바로 아래(또는 공간이 없으면 위)에 팝업이 뜨도록 위치를 계산하고,
+  // 화면 좌우 밖으로 넘어가지 않게 clamp 한다. 팝업은 body에 포털로 렌더링해서
+  // 카드의 overflow나 좁은 grid 칸 폭에 영향을 받지 않는다.
+  useLayoutEffect(() => {
+    if (!revealed) {
+      setPos(null);
+      return;
+    }
+    const compute = () => {
+      if (!btnRef.current || !popupRef.current) return;
+      const btnRect = btnRef.current.getBoundingClientRect();
+      const popupRect = popupRef.current.getBoundingClientRect();
+      const margin = 8;
+      let left = btnRect.left + btnRect.width / 2 - popupRect.width / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - popupRect.width - margin));
+      let top = btnRect.bottom + 6;
+      if (top + popupRect.height + margin > window.innerHeight) {
+        top = btnRect.top - popupRect.height - 6;
+      }
+      setPos({ top, left });
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    window.addEventListener("scroll", compute, true);
+    return () => {
+      window.removeEventListener("resize", compute);
+      window.removeEventListener("scroll", compute, true);
+    };
+  }, [revealed]);
+
   return (
     <div className="relative flex items-center gap-1.5 rounded-lg px-1.5 py-1 hover:bg-[#24272C] transition-colors min-w-0">
       <button
@@ -601,6 +636,7 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, 
       <span className="w-3.5 shrink-0 text-[10px] font-mono text-[#5C6067]">{index}</span>
 
       <button
+        ref={btnRef}
         type="button"
         onMouseEnter={() => onReveal(member.id)}
         onMouseLeave={() => onReveal(null)}
@@ -615,31 +651,37 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, 
         {displayName(member.name)}
       </button>
 
-      {revealed && (
-        <div className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-30 whitespace-normal sm:absolute sm:left-1/2 sm:right-auto sm:top-full sm:translate-y-0 sm:-translate-x-1/2 sm:mt-1 sm:z-10 sm:w-max sm:max-w-[80vw] sm:whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-3 py-2 text-xs font-mono shadow-xl">
-          <div className="text-[#F2F3F5]">회원번호 {member.phone}</div>
-          {member.changed && (
-            <div className="text-[#FF6A3D] mt-0.5">
-              비고 : 시간 변경{member.changed_from ? ` (${member.changed_from} → ${member.time})` : ""}
+      {revealed &&
+        createPortal(
+          <div
+            ref={popupRef}
+            style={pos ? { top: pos.top, left: pos.left, visibility: "visible" } : { top: 0, left: 0, visibility: "hidden" }}
+            className="fixed z-50 w-max max-w-[85vw] whitespace-nowrap rounded-lg border-2 border-[#E7843B] bg-[#1B1E24] px-3 py-2 text-xs font-mono shadow-[0_10px_35px_rgba(0,0,0,0.7)]"
+          >
+            <div className="text-[#F2F3F5]">회원번호 {member.phone}</div>
+            {member.changed && (
+              <div className="text-[#FF8A5C] mt-0.5">
+                비고 : 시간 변경{member.changed_from ? ` (${member.changed_from} → ${member.time})` : ""}
+              </div>
+            )}
+            <div className="text-[#9BA0A8] mt-0.5">
+              작성시간 {formatClock(member.updated_at)}
+              {member.changed && <span className="text-[#FF8A5C]"> (변경:{formatClock(member.commented_at)})</span>}
             </div>
-          )}
-          <div className="text-[#5C6067] mt-0.5">
-            작성시간 {formatClock(member.updated_at)}
-            {member.changed && <span className="text-[#FF6A3D]"> (변경:{formatClock(member.commented_at)})</span>}
-          </div>
-          {isAdmin && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onForceCancel();
-              }}
-              className="mt-1 flex items-center gap-1 text-pink-400 hover:text-pink-300"
-            >
-              <Trash2 size={11} /> 예약 취소
-            </button>
-          )}
-        </div>
-      )}
+            {isAdmin && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onForceCancel();
+                }}
+                className="mt-1 flex items-center gap-1 text-pink-400 hover:text-pink-300"
+              >
+                <Trash2 size={11} /> 예약 취소
+              </button>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
