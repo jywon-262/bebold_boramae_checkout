@@ -179,7 +179,7 @@ export default function BookingView({ showToast }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-5 space-y-6">
       <section className="rounded-xl border border-[#2E3238] bg-[#1C1E22] p-5">
-        <h2 className="font-display text-sm font-bold uppercase tracking-wide text-[#F5C518] flex items-center gap-2 mb-4">
+        <h2 className="font-display text-sm font-bold uppercase tracking-wide text-[#E7843B] flex items-center gap-2 mb-4">
           <CalendarCheck size={16} /> 예약하기
         </h2>
 
@@ -208,10 +208,10 @@ export default function BookingView({ showToast }) {
                     key={t}
                     type="button"
                     onClick={() => setBookTime(t)}
-                    className={`rounded-lg border py-2 text-sm font-mono transition-colors ${
+                    className={`rounded-lg border-2 py-2 text-sm font-mono transition-colors ${
                       bookTime === t
-                        ? "border-[#F5C518] bg-[#F5C518]/15 text-[#F5C518]"
-                        : "border-[#2E3238] text-[#D5D7DC] hover:border-[#F5C518]/40"
+                        ? "border-[#F0954F] bg-[#E7843B]/20 text-[#F0954F] font-semibold"
+                        : "border-[#2E3238] text-[#D5D7DC] hover:border-[#E7843B]/80"
                     }`}
                   >
                     {t}
@@ -231,7 +231,7 @@ export default function BookingView({ showToast }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="홍길동"
-                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-2 text-sm outline-none focus:border-[#F5C518]/40"
+                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-2 text-sm outline-none focus:border-[#E7843B]/40"
               />
             </div>
             <div>
@@ -245,7 +245,7 @@ export default function BookingView({ showToast }) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="1234"
-                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-2 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-2 text-sm font-mono outline-none focus:border-[#E7843B]/40"
               />
             </div>
           </div>
@@ -272,7 +272,7 @@ export default function BookingView({ showToast }) {
               type="date"
               value={cancelDate}
               onChange={(e) => setCancelDate(e.target.value)}
-              className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-xs font-mono outline-none focus:border-[#F5C518]/40 [color-scheme:dark]"
+              className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-xs font-mono outline-none focus:border-[#E7843B]/40 [color-scheme:dark]"
             />
           </div>
 
@@ -284,7 +284,7 @@ export default function BookingView({ showToast }) {
                 value={cancelName}
                 onChange={(e) => setCancelName(e.target.value)}
                 placeholder="홍길동"
-                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm outline-none focus:border-[#F5C518]/40"
+                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm outline-none focus:border-[#E7843B]/40"
               />
             </div>
             <span className="pb-2.5 text-[11px] font-medium text-[#5C6067]">또는</span>
@@ -297,7 +297,7 @@ export default function BookingView({ showToast }) {
                 value={cancelPhone}
                 onChange={(e) => setCancelPhone(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="1234"
-                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+                className="w-full rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-2 text-sm font-mono outline-none focus:border-[#E7843B]/40"
               />
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function BookingView({ showToast }) {
           <button
             type="submit"
             disabled={searching}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#2E3238] py-2 text-xs font-medium text-[#8B9099] hover:text-[#F5C518] hover:border-[#F5C518]/40 disabled:opacity-40 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#2E3238] py-2 text-xs font-medium text-[#8B9099] hover:text-[#E7843B] hover:border-[#E7843B]/40 disabled:opacity-40 transition-colors"
           >
             <Search size={13} /> {searching ? "조회 중..." : "내 예약 찾기"}
           </button>
@@ -334,7 +334,7 @@ export default function BookingView({ showToast }) {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => (changingId === r.id ? setChangingId(null) : openChangeTime(r))}
-                          className="flex items-center gap-1 text-xs font-medium text-[#8B9099] hover:text-[#F5C518]"
+                          className="flex items-center gap-1 text-xs font-medium text-[#8B9099] hover:text-[#E7843B]"
                         >
                           <Repeat size={12} /> 시간 변경
                         </button>
@@ -353,7 +353,7 @@ export default function BookingView({ showToast }) {
                       <select
                         value={changeDraft}
                         onChange={(e) => setChangeDraft(e.target.value)}
-                        className="flex-1 rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-1.5 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+                        className="flex-1 rounded-lg border border-[#2E3238] bg-[#121316] px-2 py-1.5 text-sm font-mono outline-none focus:border-[#E7843B]/40"
                       >
                         {cancelDateTimes.length === 0 && <option value="">열려있는 시간 없음</option>}
                         {cancelDateTimes.map((t) => (
@@ -364,7 +364,7 @@ export default function BookingView({ showToast }) {
                       </select>
                       <button
                         onClick={() => confirmChangeTime(r.id)}
-                        className="rounded-lg bg-[#F5C518] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#F5C518]/90"
+                        className="rounded-lg bg-[#E7843B] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#E7843B]/90"
                       >
                         변경
                       </button>

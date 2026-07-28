@@ -311,7 +311,7 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => setDate(todayStr())}
-                  className="hidden sm:block rounded-lg border border-[#2E3238] bg-[#1C1E22] px-3 py-1.5 text-xs font-medium text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 transition-colors"
+                  className="hidden sm:block rounded-lg border border-[#2E3238] bg-[#1C1E22] px-3 py-1.5 text-xs font-medium text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#E7843B]/40 transition-colors"
                 >
                   오늘
                 </button>
@@ -342,11 +342,11 @@ export default function App() {
                 onChange={(e) => setPinDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitPin()}
                 placeholder="관리자 인증"
-                className="w-40 rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-1.5 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+                className="w-40 rounded-lg border border-[#2E3238] bg-[#121316] px-3 py-1.5 text-sm font-mono outline-none focus:border-[#E7843B]/40"
               />
               <button
                 onClick={submitPin}
-                className="rounded-lg bg-[#F5C518] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#F5C518]/90"
+                className="rounded-lg bg-[#E7843B] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#E7843B]/90"
               >
                 확인
               </button>
@@ -375,7 +375,7 @@ export default function App() {
               {date} 타임테이블
             </h2>
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 rounded-full bg-[#F5C518]/15 px-3 py-1 text-xs font-semibold text-[#F5C518]">
+              <span className="flex items-center gap-1.5 rounded-full bg-[#E7843B]/15 px-3 py-1 text-xs font-semibold text-[#E7843B]">
                 전체 {counts.total}
               </span>
               <span className="flex items-center gap-1.5 rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-400">
@@ -511,7 +511,7 @@ function SlotCard({ time, list, accent, expanded, onToggle, onCopy, onToggleAtte
   const nearFull = count >= WARN_START && waitlistCount === 0;
 
   return (
-    <div className={`flex flex-col h-full rounded-xl border overflow-hidden ${CARD_BG_MAP[accent] || CARD_BG_MAP.gray}`}>
+    <div className={`relative flex flex-col h-full rounded-xl border ${CARD_BG_MAP[accent] || CARD_BG_MAP.gray}`}>
       <button onClick={onToggle} className="w-full text-left px-4 pt-4 pb-3 group">
         <div className="flex items-start justify-between">
           <div className="flex items-baseline gap-2">
@@ -569,7 +569,7 @@ function SlotCard({ time, list, accent, expanded, onToggle, onCopy, onToggleAtte
           <button
             onClick={onCopy}
             disabled={list.length === 0}
-            className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#2E3238] py-2 text-xs font-medium text-[#8B9099] hover:text-[#F5C518] hover:border-[#F5C518]/40 disabled:opacity-30 transition-colors"
+            className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg border-2 border-[#2E3238] py-2 text-xs font-medium text-[#8B9099] hover:text-[#F0954F] hover:border-[#E7843B] disabled:opacity-30 transition-colors"
           >
             <Copy size={13} /> {time} 타임 명단 복사
           </button>
@@ -616,7 +616,7 @@ function MemberRow({ index, member, tier, revealed, onReveal, onToggleAttended, 
       </button>
 
       {revealed && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full z-10 mt-1 whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-2.5 py-1.5 text-[11px] font-mono shadow-xl">
+        <div className="absolute left-1/2 -translate-x-1/2 top-full z-10 mt-1 w-max max-w-[80vw] whitespace-nowrap rounded-lg border border-[#2E3238] bg-[#0D0E10] px-3 py-2 text-xs font-mono shadow-xl">
           <div className="text-[#F2F3F5]">회원번호 {member.phone}</div>
           {member.changed && (
             <div className="text-[#FF6A3D] mt-0.5">

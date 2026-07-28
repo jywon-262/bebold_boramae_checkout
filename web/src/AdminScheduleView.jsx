@@ -41,7 +41,7 @@ function OpenGymPicker({ initialTimes, onSaveRange, onSaveClosed, onCancel, busy
         <select
           value={start}
           onChange={(e) => setStart(e.target.value)}
-          className="rounded-md border border-[#2E3238] bg-[#1C1E22] px-2 py-1.5 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+          className="rounded-md border border-[#2E3238] bg-[#1C1E22] px-2 py-1.5 text-sm font-mono outline-none focus:border-[#E7843B]/40"
         >
           {OPEN_GYM_HOURS.map((h) => (
             <option key={h} value={h}>
@@ -53,7 +53,7 @@ function OpenGymPicker({ initialTimes, onSaveRange, onSaveClosed, onCancel, busy
         <select
           value={end}
           onChange={(e) => setEnd(e.target.value)}
-          className="rounded-md border border-[#2E3238] bg-[#1C1E22] px-2 py-1.5 text-sm font-mono outline-none focus:border-[#F5C518]/40"
+          className="rounded-md border border-[#2E3238] bg-[#1C1E22] px-2 py-1.5 text-sm font-mono outline-none focus:border-[#E7843B]/40"
         >
           {OPEN_GYM_HOURS.map((h) => (
             <option key={h} value={h}>
@@ -67,14 +67,14 @@ function OpenGymPicker({ initialTimes, onSaveRange, onSaveClosed, onCancel, busy
         <button
           disabled={busy || invalid}
           onClick={() => onSaveRange(hourRange(start, end))}
-          className="rounded-md bg-[#F5C518] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#F5C518]/90 disabled:opacity-40"
+          className="rounded-md bg-[#E7843B] px-3 py-1.5 text-xs font-semibold text-[#121316] hover:bg-[#E7843B]/90 disabled:opacity-40"
         >
           오픈짐으로 저장
         </button>
         <button
           disabled={busy}
           onClick={onSaveClosed}
-          className="rounded-md border border-[#2E3238] px-3 py-1.5 text-xs font-medium text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 disabled:opacity-40"
+          className="rounded-md border border-[#2E3238] px-3 py-1.5 text-xs font-medium text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#E7843B]/40 disabled:opacity-40"
         >
           휴회로 저장
         </button>
@@ -92,7 +92,7 @@ function TimesDisplay({ times, isAdmin, onRemove }) {
   if (times.length === 0) return null;
   if (isContiguousHourly(times)) {
     return (
-      <span className="text-base font-bold font-mono text-[#F5C518]">
+      <span className="text-base font-bold font-mono text-[#E7843B]">
         {times[0]} ~ {times[times.length - 1]}
       </span>
     );
@@ -249,7 +249,7 @@ export default function AdminScheduleView({ isAdmin, pin, showToast }) {
                   {editingSundayParity !== parity && (
                     <button
                       onClick={() => setEditingSundayParity(parity)}
-                      className="flex items-center gap-1 text-[11px] text-[#8B9099] hover:text-[#F5C518]"
+                      className="flex items-center gap-1 text-[11px] text-[#8B9099] hover:text-[#E7843B]"
                     >
                       <Pencil size={11} /> 수정
                     </button>
@@ -298,7 +298,7 @@ export default function AdminScheduleView({ isAdmin, pin, showToast }) {
                     </span>
                   )}
                   {isOverridden && (
-                    <span className="rounded-full bg-[#F5C518]/15 px-2 py-0.5 text-[10px] font-semibold text-[#F5C518]">
+                    <span className="rounded-full bg-[#E7843B]/15 px-2 py-0.5 text-[10px] font-semibold text-[#E7843B]">
                       예외 적용됨
                     </span>
                   )}
@@ -310,14 +310,14 @@ export default function AdminScheduleView({ isAdmin, pin, showToast }) {
                         <button
                           disabled={busy}
                           onClick={() => applyOverride(dateStr, weekdayPreset)}
-                          className="rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 disabled:opacity-40"
+                          className="rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#E7843B]/40 disabled:opacity-40"
                         >
                           평일 프리셋
                         </button>
                         <button
                           disabled={busy}
                           onClick={() => applyOverride(dateStr, weekendPreset)}
-                          className="rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 disabled:opacity-40"
+                          className="rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#E7843B]/40 disabled:opacity-40"
                         >
                           주말 프리셋
                         </button>
@@ -326,7 +326,7 @@ export default function AdminScheduleView({ isAdmin, pin, showToast }) {
                     <button
                       disabled={busy}
                       onClick={() => setOpenGymTarget(pickerOpen ? null : dateStr)}
-                      className="flex items-center gap-1 rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#E7843B]/40 disabled:opacity-40"
                     >
                       <Dumbbell size={11} /> 오픈짐
                     </button>
@@ -334,7 +334,7 @@ export default function AdminScheduleView({ isAdmin, pin, showToast }) {
                       <button
                         disabled={busy}
                         onClick={() => resetToDefault(dateStr)}
-                        className="flex items-center gap-1 rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#F5C518]/40 disabled:opacity-40"
+                        className="flex items-center gap-1 rounded-md border border-[#2E3238] px-2 py-1 text-[11px] text-[#8B9099] hover:text-[#F2F3F5] hover:border-[#E7843B]/40 disabled:opacity-40"
                       >
                         <RotateCcw size={11} /> 기본값으로
                       </button>
@@ -364,13 +364,13 @@ export default function AdminScheduleView({ isAdmin, pin, showToast }) {
                       onChange={(e) =>
                         setNewTimeByDate((prev) => ({ ...prev, [dateStr]: e.target.value }))
                       }
-                      className="w-16 rounded-md border border-[#2E3238] bg-[#121316] px-2 py-1 text-xs font-mono outline-none focus:border-[#F5C518]/40"
+                      className="w-16 rounded-md border border-[#2E3238] bg-[#121316] px-2 py-1 text-xs font-mono outline-none focus:border-[#E7843B]/40"
                     />
                     <button
                       disabled={busy}
                       onClick={() => addTime(dateStr, times)}
                       aria-label="시간 추가"
-                      className="grid h-6 w-6 place-items-center rounded-md border border-[#2E3238] text-[#8B9099] hover:text-[#F5C518] hover:border-[#F5C518]/40 disabled:opacity-40"
+                      className="grid h-6 w-6 place-items-center rounded-md border border-[#2E3238] text-[#8B9099] hover:text-[#E7843B] hover:border-[#E7843B]/40 disabled:opacity-40"
                     >
                       <Plus size={12} />
                     </button>
