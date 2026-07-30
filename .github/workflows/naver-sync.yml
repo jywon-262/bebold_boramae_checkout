@@ -1,9 +1,13 @@
 name: Naver Cafe Sync
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"   # 5분마다 (GitHub 부하 상황에 따라 지연될 수 있음)
-  workflow_dispatch: {}       # Actions 탭에서 수동 실행 버튼도 생김 (테스트용)
+  # v2(자체 예약 시스템)로 전환하면서 이 자동 스크래핑은 비활성화함.
+  # 네이버 로그인 세션(NID_AUT/NID_SES)이 등록돼 있지 않아 5분마다 계속 실패 메일만 보내고 있었음.
+  # 필요해지면 아래 schedule 줄의 주석을 풀고 Secrets(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+  # NAVER_CLUB_ID, NAVER_MENU_ID, NID_AUT, NID_SES)를 등록한 뒤 다시 켤 것.
+  # schedule:
+  #   - cron: "*/5 * * * *"
+  workflow_dispatch: {}       # Actions 탭에서 수동 실행 버튼은 남겨둠 (필요시 테스트용)
 
 jobs:
   sync:
